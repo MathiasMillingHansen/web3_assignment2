@@ -1,0 +1,48 @@
+.lobby_container {
+    height: 60vh;
+    width: 100vw;
+    display: flex;
+    justify-content: space-evenly;
+    flex-direction: row;
+}
+
+.lobby_button_container {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    height: 25vh;
+    width: 10vw;
+    margin-top: 10vh;
+}
+
+.lobby_button {
+    width: 20vw;
+    height: 17.5vh;
+    background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+    color: #fff;
+    border: none;
+    border-radius: 2rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 1.5px 4px rgba(255, 75, 43, 0.15);
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(.4, 2, .6, 1), box-shadow 0.2s, background 0.3s;
+    outline: none;
+}
+
+.lobby_button:hover,
+.lobby_button:focus {
+    transform: scale(1.02);
+    box-shadow: 0 12px 32px rgba(255, 65, 108, 0.25), 0 2px 8px rgba(255, 75, 43, 0.18);
+    background: linear-gradient(135deg, #ff4b2b 0%, #ff416c 100%);
+}
+
+.lobby_button h2 {
+    display: block;
+    width: 100%;
+    font-weight: bold;
+    font-size: clamp(1rem, 2.5vw, 2.5rem);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+}
