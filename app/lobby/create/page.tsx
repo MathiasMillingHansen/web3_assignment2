@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/src/store/hooks";
 import { createGameRequest } from "@/src/store/slices/gameSlice";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
+import styles from "./page.module.css";
 
 export default function CreateGame() {
     const dispatch = useAppDispatch();
     const router = useRouter();
+    const [playerName, setPlayerName] = useState("");
     const { gameId, isLoading, error } = useAppSelector((state) => state.game);
 
     useEffect(() => {
@@ -18,25 +20,41 @@ export default function CreateGame() {
         }
     }, [gameId, router]);
 
-    const handleCreateGame = () => {
-        dispatch(createGameRequest());
+    const handleCreateGame = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (playerName.trim()) {
+            dispatch(createGameRequest());
+        }
     };
 
     return (
-        <div>
-            <h1>Create a New Game</h1>
+        <div className={styles.container}>
+            <h1 className={styles.title}>Create a New Game</h1>
             
-            <button 
-                onClick={handleCreateGame}
-                disabled={isLoading}
-            >
-                {isLoading ? 'Creating...' : 'Create Game'}
-            </button>
+            <form onSubmit={handleCreateGame} className={styles.form}>
+                <input
+                    type="text"
+                    placeholder="Enter your name"
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                    className={styles.input}
+                    disabled={isLoading}
+                    required
+                />
+                
+                <button 
+                    type="submit"
+                    className={styles.button}
+                    disabled={isLoading || !playerName.trim()}
+                >
+                    {isLoading ? 'Creating...' : 'Create Game'}
+                </button>
+            </form>
 
-            {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+            {error && <p className={styles.error}>Error: {error}</p>}
             
             <Link href="/lobby">
-                <button>Back to Lobby</button>
+                <button className={styles.backButton}>Back to Lobby</button>
             </Link>
         </div>
     );

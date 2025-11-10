@@ -1,0 +1,90 @@
+.container {
+    height: 60vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.input {
+    width: 20vw;
+    min-width: 250px;
+    padding: 1rem;
+    border-radius: 1rem;
+    border: 2px solid #ff416c;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.input:focus {
+    border-color: #ff4b2b;
+}
+
+.button {
+    width: 20vw;
+    min-width: 250px;
+    height: 60px;
+    background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+    color: #fff;
+    border: none;
+    border-radius: 2rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 1.5px 4px rgba(255, 75, 43, 0.15);
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(.4, 2, .6, 1), box-shadow 0.2s, background 0.3s;
+    outline: none;
+}
+
+.button:hover:not(:disabled) {
+    transform: scale(1.02);
+    box-shadow: 0 12px 32px rgba(255, 65, 108, 0.25), 0 2px 8px rgba(255, 75, 43, 0.18);
+    background: linear-gradient(135deg, #ff4b2b 0%, #ff416c 100%);
+}
+
+.button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.backButton {
+    width: 15vw;
+    min-width: 180px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border: none;
+    border-radius: 1.5rem;
+    font-size: 1rem;
+    font-weight: bold;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(.4, 2, .6, 1), box-shadow 0.2s;
+    outline: none;
+}
+
+.backButton:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
+}
+
+.error {
+    color: #ff416c;
+    font-weight: bold;
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+}
