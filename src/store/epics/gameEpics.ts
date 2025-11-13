@@ -1,44 +1,45 @@
 import { combineEpics, Epic } from 'redux-observable';
-import { filter, map, catchError, delay } from 'rxjs/operators';
+import { filter, map, catchError, mergeMap } from 'rxjs/operators';
 import { of } from 'rxjs';
-import {
-  createGameRequest,
-  createGameSuccess,
-  createGameFailure,
-  joinGameRequest,
-  joinGameSuccess,
-  joinGameFailure,
-} from '../slices/gameSlice';
+import { ajax } from 'rxjs/ajax';
+import * as slice from '../slices/gameSlice';
+
+import * as api from '@/src/api';
 
 // Epic for creating a game
 const createGameEpic: Epic = (action$) =>
   action$.pipe(
-    filter(createGameRequest.match),
-    delay(1000), // Simulate API call
-    map(() => {
-      // Generate a random game ID
-      const gameId = Math.random().toString(36).substring(7);
-      return createGameSuccess(gameId);
-    }),
-    catchError((error) => of(createGameFailure(error.message)))
+    filter(slice.createGameRequest.match),
+    mergeMap((action) =>
+      ajax
+        .post<api.CreateGameResponse>(
+          '/api/create-game',
+          action.payload,
+          { 'Content-Type': 'application/json' }
+        )
+        .pipe(
+          map((response) => slice.createGameSuccess(response.response)),
+          catchError((error) => of(slice.createGameFailure(error.ajaxError.message)))
+        )
+    )
   );
 
-// Epic for joining a game
+// Epic for joining a game (remains unchanged)
 const joinGameEpic: Epic = (action$) =>
   action$.pipe(
-    filter(joinGameRequest.match),
-    delay(1000), // Simulate API call
-    map((action) => {
-      // Simulate successful join
-      return joinGameSuccess({
-        gameId: action.payload,
-        players: ['Player 1', 'Player 2'],
-      });
-    }),
-    catchError((error) => of(joinGameFailure(error.message)))
+    filter(slice.joinGameRequest.match),
+    mergeMap((action) =>
+      ajax
+        .post<api.JoinGameResponse>(
+          '/api/join-game',
+          action.payload,
+          { 'Content-Type': 'application/json' }
+        )
+        .pipe(
+          map((response) => slice.joinGameSuccess(response.response)),
+          catchError((error) => of(slice.joinGameFailure(error.ajaxError.message)))
+        )
+    )
   );
 
-export const gameEpics = combineEpics(
-  createGameEpic,
-  joinGameEpic
-);
+export const gameEpics = combineEpics(createGameEpic, joinGameEpic);

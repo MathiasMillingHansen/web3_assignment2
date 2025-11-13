@@ -11,19 +11,18 @@ export default function CreateGame() {
     const dispatch = useAppDispatch();
     const router = useRouter();
     const [playerName, setPlayerName] = useState("");
-    const { gameId, isLoading, error } = useAppSelector((state) => state.game);
+    const state = useAppSelector((state) => state.game);
 
     useEffect(() => {
-        if (gameId) {
-            // Redirect to game page when game is created
-            router.push(`/game?id=${gameId}`);
+        if (state.game) {
+            router.push(`/game?id=${state.game.gameId}`); // Redirect to game page when game is created
         }
-    }, [gameId, router]);
+    }, [state.game, router]);
 
     const handleCreateGame = (e: React.FormEvent) => {
         e.preventDefault();
         if (playerName.trim()) {
-            dispatch(createGameRequest());
+            dispatch(createGameRequest({ playerName }));
         }
     };
 
@@ -38,20 +37,20 @@ export default function CreateGame() {
                     value={playerName}
                     onChange={(e) => setPlayerName(e.target.value)}
                     className={styles.input}
-                    disabled={isLoading}
+                    disabled={state.loading}
                     required
                 />
                 
                 <button 
                     type="submit"
                     className={styles.button}
-                    disabled={isLoading || !playerName.trim()}
+                    disabled={state.loading || !playerName.trim()}
                 >
-                    {isLoading ? 'Creating...' : 'Create Game'}
+                    {state.loading ? 'Creating...' : 'Create Game'}
                 </button>
             </form>
 
-            {error && <p className={styles.error}>Error: {error}</p>}
+            {state.error && <p className={styles.error}>Error: {state.error}</p>}
             
             <Link href="/lobby">
                 <button className={styles.backButton}>Back to Lobby</button>

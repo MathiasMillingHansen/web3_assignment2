@@ -1,16 +1,15 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import * as api from '../../api';
 
 interface GameState {
-  gameId: string | null;
-  players: string[];
-  isLoading: boolean;
+  game: api.Game | null;
+  loading: boolean;
   error: string | null;
 }
 
 const initialState: GameState = {
-  gameId: null,
-  players: [],
-  isLoading: false,
+  game: null,
+  loading: false,
   error: null,
 };
 
@@ -18,34 +17,32 @@ export const gameSlice = createSlice({
   name: 'game',
   initialState,
   reducers: {
-    createGameRequest: (state) => {
-      state.isLoading = true;
+    createGameRequest: (state, action: PayloadAction<api.CreateGameRequest>) => {
+      state.loading = true;
       state.error = null;
     },
-    createGameSuccess: (state, action: PayloadAction<string>) => {
-      state.isLoading = false;
-      state.gameId = action.payload;
+    createGameSuccess: (state, action: PayloadAction<api.CreateGameResponse>) => {
+      state.loading = false;
+      state.game = action.payload.game;
     },
     createGameFailure: (state, action: PayloadAction<string>) => {
-      state.isLoading = false;
+      state.loading = false;
       state.error = action.payload;
     },
-    joinGameRequest: (state, action: PayloadAction<string>) => {
-      state.isLoading = true;
+    joinGameRequest: (state, action: PayloadAction<api.JoinGameRequest>) => {
+      state.loading = true;
       state.error = null;
     },
-    joinGameSuccess: (state, action: PayloadAction<{ gameId: string; players: string[] }>) => {
-      state.isLoading = false;
-      state.gameId = action.payload.gameId;
-      state.players = action.payload.players;
+    joinGameSuccess: (state, action: PayloadAction<api.JoinGameResponse>) => {
+      state.loading = false;
+      state.game = action.payload.game;
     },
     joinGameFailure: (state, action: PayloadAction<string>) => {
-      state.isLoading = false;
+      state.loading = false;
       state.error = action.payload;
     },
     resetGame: (state) => {
-      state.gameId = null;
-      state.players = [];
+      state.game = null;
       state.error = null;
     },
   },

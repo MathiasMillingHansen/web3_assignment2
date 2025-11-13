@@ -12,7 +12,7 @@ export default function JoinGame() {
     const router = useRouter();
     const [gameCode, setGameCode] = useState("");
     const [playerName, setPlayerName] = useState("");
-    const { gameId, isLoading, error } = useAppSelector((state) => state.game);
+    const { gameId, loading: isLoading, error } = useAppSelector((state) => state.game);
 
     useEffect(() => {
         if (gameId) {
