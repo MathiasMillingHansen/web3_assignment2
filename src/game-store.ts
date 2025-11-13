@@ -1,8 +1,7 @@
-import nextConfig from '@/next.config';
 import * as api from '@/src/api';
 
 class GameStore {
-    private games: Map<string, api.Game> = new Map();
+    public games: Map<string, api.Game> = new Map();
     private nextGameId: number = 1;
 
     create(playerName: string): api.Game {
@@ -16,10 +15,9 @@ class GameStore {
         return game;
     }
 
-    get(gameId: string): api.Game {
+    get(gameId: string): api.Game | null {
         let game = this.games.get(gameId);
-        if (!game) throw new Error('Game id not found');
-        return game;
+        return game ?? null;
     }
 }
 

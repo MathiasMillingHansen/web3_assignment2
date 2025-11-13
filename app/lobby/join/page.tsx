@@ -10,21 +10,20 @@ import styles from "./page.module.css";
 export default function JoinGame() {
     const dispatch = useAppDispatch();
     const router = useRouter();
-    const [gameCode, setGameCode] = useState("");
+    const [gameId, setGameId] = useState("");
     const [playerName, setPlayerName] = useState("");
-    const { gameId, loading: isLoading, error } = useAppSelector((state) => state.game);
+    const state = useAppSelector((state) => state.game);
 
     useEffect(() => {
-        if (gameId) {
-            // Redirect to game page when joined
-            router.push(`/game?id=${gameId}`);
+        if (state.game) {
+            router.push(`/game?id=${state.game.gameId}`);
         }
-    }, [gameId, router]);
+    }, [state.game, router]);
 
     const handleJoinGame = (e: React.FormEvent) => {
         e.preventDefault();
-        if (gameCode.trim() && playerName.trim()) {
-            dispatch(joinGameRequest(gameCode));
+        if (gameId.trim() && playerName.trim()) {
+            dispatch(joinGameRequest({ gameId: gameId, playerName }));
         }
     };
 
@@ -39,30 +38,30 @@ export default function JoinGame() {
                     value={playerName}
                     onChange={(e) => setPlayerName(e.target.value)}
                     className={styles.input}
-                    disabled={isLoading}
+                    disabled={state.loading}
                     required
                 />
                 
                 <input
                     type="text"
                     placeholder="Enter game code"
-                    value={gameCode}
-                    onChange={(e) => setGameCode(e.target.value)}
+                    value={gameId}
+                    onChange={(e) => setGameId(e.target.value)}
                     className={styles.input}
-                    disabled={isLoading}
+                    disabled={state.loading}
                     required
                 />
                 
                 <button 
                     type="submit" 
                     className={styles.button}
-                    disabled={isLoading || !gameCode.trim() || !playerName.trim()}
+                    disabled={state.loading || !gameId.trim() || !playerName.trim()}
                 >
-                    {isLoading ? 'Joining...' : 'Join Game'}
+                    {state.loading ? 'Joining...' : 'Join Game'}
                 </button>
             </form>
 
-            {error && <p className={styles.error}>Error: {error}</p>}
+            {state.error && <p className={styles.error}>Error: {state.error}</p>}
             
             <Link href="/lobby">
                 <button className={styles.backButton}>Back to Lobby</button>

@@ -6,7 +6,11 @@ import * as slice from '../slices/gameSlice';
 
 import * as api from '@/src/api';
 
-// Epic for creating a game
+function errorMessageFromAjax(error: any): string {
+  console.log(error);
+  return `${error.response?.error ?? error.message ?? 'An unknown error occurred'}`;
+}
+
 const createGameEpic: Epic = (action$) =>
   action$.pipe(
     filter(slice.createGameRequest.match),
@@ -19,12 +23,11 @@ const createGameEpic: Epic = (action$) =>
         )
         .pipe(
           map((response) => slice.createGameSuccess(response.response)),
-          catchError((error) => of(slice.createGameFailure(error.ajaxError.message)))
+          catchError((error) => of(slice.createGameFailure(errorMessageFromAjax(error))))
         )
     )
   );
 
-// Epic for joining a game (remains unchanged)
 const joinGameEpic: Epic = (action$) =>
   action$.pipe(
     filter(slice.joinGameRequest.match),
@@ -37,7 +40,8 @@ const joinGameEpic: Epic = (action$) =>
         )
         .pipe(
           map((response) => slice.joinGameSuccess(response.response)),
-          catchError((error) => of(slice.joinGameFailure(error.ajaxError.message)))
+          catchError((error) => of(slice.joinGameFailure(errorMessageFromAjax(error)))
+          )
         )
     )
   );
