@@ -1,22 +1,24 @@
 import * as api from '@/src/api';
 import { NextResponse } from 'next/server';
-import { GLOBAL_GAME_STORE } from '@/src/game-store';
+import * as db from '@/src/file_database';
+
+// TODO(rune): This is a bit racey
 
 export async function POST(request: Request) {
-    const body = await request.json() as api.JoinGameRequest;
-    console.log('[server]', GLOBAL_GAME_STORE.games);
-    console.log(`[server] join game request for game id: ${body.gameId} by player: ${body.playerName}`);
-    let game = GLOBAL_GAME_STORE.get(body.gameId);
+    let requestBody = await request.json() as api.JoinGameRequest;
+    let game = await db.find<api.Game>('games', requestBody.gameId);
     if (!game) {
         return NextResponse.json({ error: 'Game not found' }, { status: 404 });
     }
 
-    if (game.playerNames.includes(body.playerName)) {
+    if (game.playerNames.includes(requestBody.playerName)) {
         return NextResponse.json({ error: 'Player name already taken in this game' }, { status: 400 });
     }
 
-    console.log(`[server] player ${body.playerName} joined game id: ${game.gameId}`);
+    game.playerNames.push(requestBody.playerName);
+    await db.upsert<api.Game>('games', game.gameId, game);
 
-    let response: api.JoinGameResponse = { game };
-    return NextResponse.json(response);
+    let responseBody: api.JoinGameResponse = { game };
+    let response = NextResponse.json(responseBody)
+    return response;
 }
