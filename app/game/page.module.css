@@ -232,3 +232,16 @@
     border-radius: 0.5rem;
     cursor: pointer;
 }
+
+.simple_button {
+    padding: 1.5rem 3rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: linear-gradient(135deg, #66bcea 0%, #4b88a2 100%);
+    color: white;
+    border: none;
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}

@@ -5,24 +5,32 @@ import {
   getCardDisplay,
   getCardColor,
   getCurrentPlayerName,
-  hasGameEnded
 } from '@/src/client/gameState';
-import {
-  playCardRequest,
-  drawCardRequest,
-  challengeUnoRequest
-} from '@/src/store/slices/gameStateSlice';
+import * as slice from '@/src/store/slices/gameStateSlice';
 import { Color } from '@/src/model/card';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
+import { challengeUnoAction, drawCardAction, playCardAction, sayUnoAction } from '@/src/shared/api';
 
 export default function GamePage() {
+  const searchParams = useSearchParams();
+  const gameId = searchParams.get('gameId') ?? '';
+  const playerIndex = parseInt(searchParams.get('playerIndex') ?? '0');
   const gameState = useAppSelector(state => state.gameState.currentGame);
   const isLoading = useAppSelector(state => state.gameState.isLoading);
   const error = useAppSelector(state => state.gameState.error);
   const dispatch = useAppDispatch();
 
+  console.log('playerIndex', playerIndex);
+  console.log('game', gameState);
+
   const [wildCardIndex, setWildCardIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => dispatch(slice.actions.getGameRequest({ gameId, playerIndex })), 1000); // Dispatch every second
+    return () => clearInterval(intervalId);
+  }, [dispatch, gameState]);
 
   if (!gameState) {
     return (
@@ -35,15 +43,49 @@ export default function GamePage() {
     );
   }
 
-  if (hasGameEnded(gameState)) {
-    const iWon = gameState.winner === gameState.myPlayerIndex;
+  if (gameState.status == 'PRE-GAME') {
     return (
       <div className={styles.game_container}>
+        {error && (
+          <div className={styles.error_message}>
+            {error}
+          </div>
+        )}
+        <div className={styles.game_over}>
+          <h1>Waiting for players...</h1>
+          <p>Current Players:</p>
+          <ul>
+            {gameState.players.map((player, index) => (
+              <li key={index}>{player}</li>
+            ))}
+          </ul>
+          <div>
+            {playerIndex === 0 && (
+              <button className={styles.simple_button} onClick={() => dispatch(slice.actions.startGameRequest({ gameId, playerIndex }))}>Start game</button>
+            )}
+          </div>
+          <div>Game code: </div>
+          <div>{gameId}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (gameState.status == 'POST-GAME') {
+    let roundState = gameState.round!;
+    const iWon = roundState.winner === playerIndex;
+    return (
+      <div className={styles.game_container}>
+        {error && (
+          <div className={styles.error_message}>
+            {error}
+          </div>
+        )}
         <div className={styles.game_over}>
           <div className={styles.winner_message}>
             {iWon ? '🎉 You Won! 🎉' : 'Game Over'}
           </div>
-          <h2>Winner: {gameState.players[gameState.winner!]}</h2>
+          <h2>Winner: {gameState.players[roundState.winner!]}</h2>
           <div style={{ marginTop: '2rem' }}>
             <h3>Final Scores:</h3>
             {gameState.players.map((player, index) => (
@@ -57,184 +99,188 @@ export default function GamePage() {
     );
   }
 
-  const myTurn = gameState.currentPlayerIndex === gameState.myPlayerIndex;
-  const currentPlayer = getCurrentPlayerName(gameState);
+  if (gameState.status == 'IN-GAME') {
 
-  const handlePlayCard = (cardIndex: number) => {
-    if (!myTurn) return;
+    let roundState = gameState.round!;
+    const myTurn = roundState.currentPlayerIndex === playerIndex;
+    const currentPlayer = getCurrentPlayerName(gameState);
 
-    const card = gameState.myHand[cardIndex];
+    const handlePlayCard = (cardIndex: number) => {
+      if (!myTurn) return;
 
-    // Wild cards need color selection
-    if (card.type === 'WILD' || card.type === 'WILD DRAW') {
-      setWildCardIndex(cardIndex);
-      return;
-    }
+      const card = roundState.myHand[cardIndex];
 
-    // Send action to server
-    dispatch(playCardRequest({ cardIndex }));
-  };
-
-  const handleColorSelect = (color: Color) => {
-    if (wildCardIndex !== null) {
-      dispatch(playCardRequest({
-        cardIndex: wildCardIndex,
-        chosenColor: color
-      }));
-      setWildCardIndex(null);
-    }
-  };
-
-  const handleDrawCard = () => {
-    if (!myTurn) return;
-    dispatch(drawCardRequest());
-  };
-
-  const handleChallengeUno = (playerIndex: number) => {
-    // Don't challenge yourself
-    if (playerIndex === gameState.myPlayerIndex) return;
-
-    // Check if player has 1 card (potential UNO situation)
-    if (gameState.handSizes[playerIndex] === 1) {
-      const confirmed = confirm(
-        `Challenge ${gameState.players[playerIndex]} for not saying UNO?`
-      );
-      if (confirmed) {
-        dispatch(challengeUnoRequest({ targetPlayerIndex: playerIndex }));
+      // Wild cards need color selection
+      if (card.type === 'WILD' || card.type === 'WILD DRAW') {
+        setWildCardIndex(cardIndex);
+        return;
       }
-    }
-  };
 
-  return (
-    <div className={styles.game_container}>
-      {error && (
-        <div className={styles.error_message}>
-          {error}
-        </div>
-      )}
+      // Send action to server
+      dispatch(slice.actions.playActionRequest({ gameId, playerIndex, action: playCardAction(cardIndex) }));
+    };
 
-      <div className={styles.game_board}>
-        {/* Left Section - Players List */}
-        <div className={styles.players_section}>
-          <h3>Players</h3>
-          {gameState.players.map((player, index) => (
-            <div
-              key={index}
-              className={`${styles.player_card} ${
-                gameState.currentPlayerIndex === index ? styles.current_turn : ''
-              }`}
-              onClick={() => handleChallengeUno(index)}
-              title={index !== gameState.myPlayerIndex ? "Click to challenge UNO" : ""}
-            >
-              <div className={styles.player_name}>
-                {player} {index === gameState.myPlayerIndex && '(You)'}
+    const handleColorSelect = (color: Color) => {
+      if (wildCardIndex !== null) {
+        dispatch(slice.actions.playActionRequest({ gameId, playerIndex, action: playCardAction(wildCardIndex, color) }));
+        setWildCardIndex(null);
+      }
+    };
+
+    const handleDrawCard = () => {
+      if (!myTurn) return;
+      dispatch(slice.actions.playActionRequest({ gameId, playerIndex, action: drawCardAction() }));
+    };
+
+    const handleChallengeUno = (targetIndex: number) => {
+      // Don't challenge yourself
+      if (targetIndex === playerIndex) return;
+
+      // Check if player has 1 card (potential UNO situation)
+      if (roundState.handSizes[targetIndex] === 1) {
+        const confirmed = confirm(
+          `Challenge ${gameState.players[targetIndex]} for not saying UNO?`
+        );
+        if (confirmed) {
+          dispatch(slice.actions.playActionRequest({ gameId, playerIndex, action: challengeUnoAction(targetIndex) }));
+        }
+      }
+    };
+
+    return (
+      <div className={styles.game_container}>
+        {error && (
+          <div className={styles.error_message}>
+            {error}
+          </div>
+        )}
+
+        <div className={styles.game_board}>
+          {/* Left Section - Players List */}
+          <div className={styles.players_section}>
+            <h3>Players</h3>
+            {gameState.players.map((player, index) => (
+              <div
+                key={index}
+                className={`${styles.player_card} ${roundState.currentPlayerIndex === index ? styles.current_turn : ''
+                  }`}
+                onClick={() => handleChallengeUno(index)}
+                title={index !== playerIndex ? "Click to challenge UNO" : ""}
+              >
+                <div className={styles.player_name}>
+                  {player} {index === playerIndex && '(You)'}
+                </div>
+                <div className={styles.player_cards}>
+                  {roundState.handSizes[index]} card{roundState.handSizes[index] !== 1 ? 's' : ''}
+                  {roundState.handSizes[index] === 1 && ' 🔔'}
+                </div>
               </div>
-              <div className={styles.player_cards}>
-                {gameState.handSizes[index]} card{gameState.handSizes[index] !== 1 ? 's' : ''}
-                {gameState.handSizes[index] === 1 && ' 🔔'}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Center Section - Game Area */}
-        <div className={styles.center_section}>
-          {/* Top Card */}
-          <div className={styles.discard_pile}>
-            <h3>Discard Pile</h3>
-            <div
-              className={styles.top_card}
-              style={{ backgroundColor: getCardColor(gameState.topCard) }}
-            >
-              {getCardDisplay(gameState.topCard)}
-            </div>
-            {gameState.currentColor && (
-              <p style={{ marginTop: '1rem' }}>
-                Current Color: <strong>{gameState.currentColor}</strong>
-              </p>
-            )}
+            ))}
           </div>
 
-          {/* Draw Pile */}
-          <div className={styles.draw_pile_section}>
-            <h3>Draw Pile ({gameState.drawPileSize} cards)</h3>
-            <button
-              onClick={handleDrawCard}
-              disabled={!myTurn || isLoading}
-              className={styles.draw_button}
-            >
-              {isLoading ? 'Drawing...' : 'Draw Card'}
-            </button>
-          </div>
-
-          {/* Your Hand */}
-          <div className={styles.my_hand}>
-            <h3>Your Hand ({gameState.myHand.length} cards)</h3>
-            <div className={styles.cards_container}>
-              {gameState.myHand.map((card, index) => (
+          {/* Center Section - Game Area */}
+          <div className={styles.center_section}>
+            {/* Top Card */}
+            {roundState.topCard && (
+              <div className={styles.discard_pile}>
+                <h3>Discard Pile</h3>
                 <div
-                  key={index}
-                  onClick={() => handlePlayCard(index)}
-                  className={`${styles.card} ${myTurn ? styles.playable : ''}`}
-                  style={{ backgroundColor: getCardColor(card) }}
+                  className={styles.top_card}
+                  style={{ backgroundColor: getCardColor(roundState.topCard) }}
                 >
-                  {getCardDisplay(card)}
+                  {getCardDisplay(roundState.topCard)}
+                </div>
+                {roundState.currentColor && (
+                  <p style={{ marginTop: '1rem' }}>
+                    Current Color: <strong>{roundState.currentColor}</strong>
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Draw Pile */}
+            <div className={styles.draw_pile_section}>
+              <h3>Draw Pile ({roundState.drawPileSize} cards)</h3>
+              <button
+                onClick={handleDrawCard}
+                disabled={!myTurn || isLoading}
+                className={styles.draw_button}
+              >
+                {isLoading ? 'Drawing...' : 'Draw Card'}
+              </button>
+            </div>
+
+            {/* Your Hand */}
+            <div className={styles.my_hand}>
+              <h3>Your Hand ({roundState.myHand.length} cards)</h3>
+              <div className={styles.cards_container}>
+                {roundState.myHand.map((card, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handlePlayCard(index)}
+                    className={`${styles.card} ${myTurn ? styles.playable : ''}`}
+                    style={{ backgroundColor: getCardColor(card) }}
+                  >
+                    {getCardDisplay(card)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Section - Game Info */}
+          <div className={styles.info_section}>
+            <h3>Game Info</h3>
+            <div style={{ marginTop: '1rem' }}>
+              <p><strong>Current Turn:</strong></p>
+              <p>{currentPlayer} {myTurn && '(You)'}</p>
+            </div>
+            <div style={{ marginTop: '1rem' }}>
+              <p><strong>Direction:</strong></p>
+              <p style={{ fontSize: '2rem' }}>
+                {roundState.direction === 1 ? '→' : '←'}
+              </p>
+            </div>
+            <div style={{ marginTop: '1rem' }}>
+              <p><strong>Scores:</strong></p>
+              {gameState.players.map((player, index) => (
+                <div key={index} style={{ marginTop: '0.5rem' }}>
+                  {player}: {gameState.scores[index]}
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Right Section - Game Info */}
-        <div className={styles.info_section}>
-          <h3>Game Info</h3>
-          <div style={{ marginTop: '1rem' }}>
-            <p><strong>Current Turn:</strong></p>
-            <p>{currentPlayer} {myTurn && '(You)'}</p>
-          </div>
-          <div style={{ marginTop: '1rem' }}>
-            <p><strong>Direction:</strong></p>
-            <p style={{ fontSize: '2rem' }}>
-              {gameState.direction === 1 ? '→' : '←'}
-            </p>
-          </div>
-          <div style={{ marginTop: '1rem' }}>
-            <p><strong>Scores:</strong></p>
-            {gameState.players.map((player, index) => (
-              <div key={index} style={{ marginTop: '0.5rem' }}>
-                {player}: {gameState.scores[index]}
+        {/* Color Picker Modal */}
+        {wildCardIndex !== null && (
+          <div className={styles.color_picker_overlay}>
+            <div className={styles.color_picker}>
+              <h3>Choose a Color:</h3>
+              <div className={styles.color_buttons}>
+                {(['RED', 'YELLOW', 'GREEN', 'BLUE'] as Color[]).map(color => (
+                  <button
+                    key={color}
+                    onClick={() => handleColorSelect(color)}
+                    className={styles.color_button}
+                    style={{ backgroundColor: color.toLowerCase() }}
+                  >
+                    {color}
+                  </button>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Color Picker Modal */}
-      {wildCardIndex !== null && (
-        <div className={styles.color_picker_overlay}>
-          <div className={styles.color_picker}>
-            <h3>Choose a Color:</h3>
-            <div className={styles.color_buttons}>
-              {(['RED', 'YELLOW', 'GREEN', 'BLUE'] as Color[]).map(color => (
-                <button
-                  key={color}
-                  onClick={() => handleColorSelect(color)}
-                  className={styles.color_button}
-                  style={{ backgroundColor: color.toLowerCase() }}
-                >
-                  {color}
-                </button>
-              ))}
+              <button
+                onClick={() => setWildCardIndex(null)}
+                className={styles.cancel_button}
+              >
+                Cancel
+              </button>
             </div>
-            <button
-              onClick={() => setWildCardIndex(null)}
-              className={styles.cancel_button}
-            >
-              Cancel
-            </button>
           </div>
-        </div>
-      )}
-    </div>
-  );
+        )}
+      </div>
+    );
+  }
+
+  return <div>Unknown game state: {gameState.status}</div>;
 }

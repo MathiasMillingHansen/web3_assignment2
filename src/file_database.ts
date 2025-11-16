@@ -3,6 +3,8 @@ import * as path from 'path';
 
 const FILE_DATABASE_PATH = './database';
 
+// TODO(rune): This is quite racey. There is A-B-A between find and upsert
+
 export async function upsert<T>(table: string, id: string, data: T): Promise<void> {
     let tablePath = path.join(FILE_DATABASE_PATH, table);
     let recordPath = path.join(tablePath, `${id}.json`);

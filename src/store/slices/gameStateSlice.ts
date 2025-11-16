@@ -1,9 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { GameState } from '@/src/client/gameState';
 import { Color } from '@/src/model/card';
+import * as api from '@/src/shared/api';
 
 interface GameStateSlice {
-  currentGame?: GameState;
+  currentGame?: api.GameState;
   isLoading: boolean;
   error: string | null;
 }
@@ -18,50 +18,91 @@ export const gameStateSlice = createSlice({
   name: 'gameState',
   initialState,
   reducers: {
-    // Play card - send to server
-    playCardRequest: (state, _action: PayloadAction<{ cardIndex: number; chosenColor?: Color }>) => {
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+    // CreateGame
+
+    createGameRequest: (state, _action: PayloadAction<api.CreateGameRequest>) => {
       state.isLoading = true;
       state.error = null;
     },
-    playCardSuccess: (state, action: PayloadAction<GameState>) => {
+    createGameSuccess: (state, action: PayloadAction<api.CreateGameResponse>) => {
       state.isLoading = false;
-      state.currentGame = action.payload; // Server sends new state
+      state.currentGame = action.payload.game;
     },
-    playCardFailure: (state, action: PayloadAction<string>) => {
+    createGameFailure: (state, action: PayloadAction<string>) => {
       state.isLoading = false;
       state.error = action.payload;
     },
 
-    // Draw card - send to server
-    drawCardRequest: (state) => {
+    // --------------------------------------------------------------------------------------------------------------------------------
+    // JoinGame
+
+    joinGameRequest: (state, _action: PayloadAction<api.JoinGameRequest>) => {
       state.isLoading = true;
       state.error = null;
     },
-    drawCardSuccess: (state, action: PayloadAction<GameState>) => {
+    joinGameSuccess: (state, action: PayloadAction<api.JoinGameResponse>) => {
       state.isLoading = false;
-      state.currentGame = action.payload; // Server sends new state with card
+      state.currentGame = action.payload.game;
     },
-    drawCardFailure: (state, action: PayloadAction<string>) => {
+    joinGameFailure: (state, action: PayloadAction<string>) => {
       state.isLoading = false;
       state.error = action.payload;
     },
 
-    // Challenge UNO - send to server
-    challengeUnoRequest: (state, _action: PayloadAction<{ targetPlayerIndex: number }>) => {
+    // --------------------------------------------------------------------------------------------------------------------------------
+    // StartGame
+
+    startGameRequest: (state, _action: PayloadAction<api.StartGameRequest>) => {
       state.isLoading = true;
       state.error = null;
     },
-    challengeUnoSuccess: (state, action: PayloadAction<GameState>) => {
+    startGameSuccess: (state, action: PayloadAction<api.StartGameResponse>) => {
       state.isLoading = false;
-      state.currentGame = action.payload;
+      state.currentGame = action.payload.game;
     },
-    challengeUnoFailure: (state, action: PayloadAction<string>) => {
+    startGameFailure: (state, action: PayloadAction<string>) => {
       state.isLoading = false;
       state.error = action.payload;
     },
 
+    // --------------------------------------------------------------------------------------------------------------------------------
+    // GetGame
+
+    getGameRequest: (state, _action: PayloadAction<api.GetGameRequest>) => {
+      state.isLoading = true;
+      state.error = null;
+    },
+    getGameSuccess: (state, action: PayloadAction<api.GetGameResponse>) => {
+      state.isLoading = false;
+      state.currentGame = action.payload.game;
+    },
+    getGameFailure: (state, action: PayloadAction<string>) => {
+      state.isLoading = false;
+      state.error = action.payload;
+    },
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+    // PlayAction
+
+    playActionRequest: (state, _action: PayloadAction<api.PlayActionRequest>) => {
+      state.isLoading = true;
+      state.error = null;
+    },
+    playActionSuccess: (state, action: PayloadAction<api.PlayActionResponse>) => {
+      state.isLoading = false;
+      state.currentGame = action.payload.game;
+    },
+    playActionFailure: (state, action: PayloadAction<string>) => {
+      state.isLoading = false;
+      state.error = action.payload;
+    },
+
+    // --------------------------------------------------------------------------------------------------------------------------------
     // Server pushes new game state (WebSocket/polling)
-    updateGameState: (state, action: PayloadAction<GameState>) => {
+
+    updateGameState: (state, action: PayloadAction<api.GameState>) => {
       state.currentGame = action.payload;
     },
 
@@ -74,18 +115,6 @@ export const gameStateSlice = createSlice({
   },
 });
 
-export const {
-  playCardRequest,
-  playCardSuccess,
-  playCardFailure,
-  drawCardRequest,
-  drawCardSuccess,
-  drawCardFailure,
-  challengeUnoRequest,
-  challengeUnoSuccess,
-  challengeUnoFailure,
-  updateGameState,
-  resetGameState,
-} = gameStateSlice.actions;
+export const actions = gameStateSlice.actions;
 
 export default gameStateSlice.reducer;

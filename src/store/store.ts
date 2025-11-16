@@ -1,7 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { createEpicMiddleware } from 'redux-observable';
 import { rootEpic } from './epics';
-import gameReducer from './slices/gameSlice';
 import gameStateReducer from './slices/gameStateSlice';
 
 // Create the epic middleware
@@ -9,7 +8,6 @@ const epicMiddleware = createEpicMiddleware();
 
 export const store = configureStore({
   reducer: {
-    game: gameReducer,
     gameState: gameStateReducer,
   },
   middleware: (getDefaultMiddleware) =>
