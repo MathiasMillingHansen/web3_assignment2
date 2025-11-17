@@ -1,0 +1,323 @@
+.game_container {
+    min-height: 100vh;
+    padding: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.game_board {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 250px 1fr 250px;
+    gap: 2rem;
+    align-items: start;
+}
+
+.players_section {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.player_card {
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border-radius: 0.5rem;
+    background: #f5f5f5;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+
+.player_card:hover {
+    background: #e5e5e5;
+    transform: translateX(5px);
+}
+
+.player_card.current_turn {
+    background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+    color: white;
+    font-weight: bold;
+    border: 2px solid #ff9800;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+}
+
+.player_card.uno_challengeable {
+    border: 2px solid #ff6b6b;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.5);
+    animation: pulse-challenge 2s infinite;
+}
+
+@keyframes pulse-challenge {
+    0%, 100% {
+        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.5);
+    }
+    50% {
+        box-shadow: 0 6px 16px rgba(255, 107, 107, 0.8);
+    }
+}
+
+.player_name {
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.player_cards {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.center_section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+.discard_pile {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    text-align: center;
+}
+
+.top_card {
+    padding: 3rem 2rem;
+    border-radius: 1rem;
+    color: black;
+    font-size: 2rem;
+    font-weight: bold;
+    min-width: 200px;
+    min-height: 180px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    margin-top: 1rem;
+    border: 3px solid rgba(0, 0, 0, 0.2);
+    white-space: pre-line;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.draw_pile_section {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.draw_button {
+    padding: 1.5rem 3rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.draw_button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.draw_button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.uno_button {
+    padding: 1.5rem 3rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: white;
+    border: none;
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.uno_button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+}
+
+.uno_button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.uno_button.uno_said {
+    background: linear-gradient(135deg, #26de81 0%, #20bf6b 100%);
+}
+
+.my_hand {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    width: 100%;
+}
+
+.cards_container {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.card {
+    padding: 3rem 1.5rem;
+    border-radius: 1rem;
+    color: black;
+    font-weight: bold;
+    min-width: 120px;
+    min-height: 160px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    font-size: 1.5rem;
+    border: 3px solid rgba(0, 0, 0, 0.2);
+    white-space: pre-line;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.card:not(.playable) {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.card:not(.playable):hover {
+    transform: none;
+}
+
+.info_section {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.error_message {
+    background: #ff4444;
+    color: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.game_over {
+    text-align: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.winner_message {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+}
+
+.color_picker_overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.color_picker {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.color_buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.color_button {
+    padding: 2rem;
+    border: none;
+    border-radius: 1rem;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: transform 0.2s;
+}
+
+.color_button:hover {
+    transform: scale(1.1);
+}
+
+.cancel_button {
+    margin-top: 1rem;
+    padding: 0.75rem 2rem;
+    background: #666;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+.simple_button {
+    padding: 1.5rem 3rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: linear-gradient(135deg, #66bcea 0%, #4b88a2 100%);
+    color: white;
+    border: none;
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.card_wild {
+    background: linear-gradient(135deg, 
+        red 0%, 
+        orange 16.66%, 
+        yellow 33.33%, 
+        green 50%, 
+        blue 66.66%, 
+        indigo 83.33%, 
+        violet 100%) !important;
+    animation: rainbow-shift 3s ease infinite;
+    background-size: 200% 200%;
+}
+
+@keyframes rainbow-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
