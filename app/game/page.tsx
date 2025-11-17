@@ -8,12 +8,12 @@ import {
 } from '@/src/client/gameState';
 import * as slice from '@/src/store/slices/gameStateSlice';
 import { Color } from '@/src/model/card';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
 import { challengeUnoAction, drawCardAction, playCardAction, sayUnoAction } from '@/src/shared/api';
 
-export default function GamePage() {
+function GamePageContent() {
   const searchParams = useSearchParams();
   const gameId = searchParams.get('gameId') ?? '';
   const playerIndex = parseInt(searchParams.get('playerIndex') ?? '0');
@@ -93,13 +93,23 @@ export default function GamePage() {
           </div>
           <h2>Winner: {gameState.players[roundState.winner!]}</h2>
           <div style={{ marginTop: '2rem' }}>
-            <h3>Final Scores:</h3>
+            <h3>Scores:</h3>
             {gameState.players.map((player, index) => (
-              <div key={index}>
+              <div key={index} style={{ fontSize: '1.2rem', margin: '0.5rem 0' }}>
                 {player}: {gameState.scores[index]} points
               </div>
             ))}
           </div>
+          {playerIndex === 0 && (
+            <button
+              onClick={() => dispatch(slice.actions.startGameRequest({ gameId, playerIndex }))}
+              disabled={isLoading}
+              className={styles.simple_button}
+              style={{ marginTop: '2rem' }}
+            >
+              {isLoading ? 'Starting...' : 'Start New Round'}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -194,6 +204,9 @@ export default function GamePage() {
                 <div className={styles.player_cards}>
                   {roundState.handSizes[index]} card{roundState.handSizes[index] !== 1 ? 's' : ''}
                   {roundState.handSizes[index] === 1 && ' 🔔'}
+                </div>
+                <div style={{ fontSize: '0.85rem', marginTop: '0.25rem', opacity: 0.7 }}>
+                  Score: {gameState.scores[index]} pts
                 </div>
               </div>
             ))}
@@ -314,4 +327,12 @@ export default function GamePage() {
   }
 
   return <div>Unknown game state: {gameState.status}</div>;
+}
+
+export default function GamePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <GamePageContent />
+    </Suspense>
+  );
 }

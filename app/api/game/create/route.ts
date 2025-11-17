@@ -10,6 +10,7 @@ export async function POST(request: Request) {
     let game: Game = {
         gameId: randomUUID(),
         players: [requestBody.playerName],
+        scores: [0],
         status: 'PRE-GAME',
     };
     await db.upsert('game', game.gameId, game);

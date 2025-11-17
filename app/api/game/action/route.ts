@@ -5,6 +5,7 @@ import { Game, InGame, PostGame } from '@/src/model/game';
 import { gameStateForPlayer } from '../util';
 import { playAction, PlayResult } from '@/src/model/round';
 import { gameEvents } from '@/src/game_events';
+import { calculateRoundScores } from '@/src/model/scoring';
 
 function gameFromPlayResult(game: InGame, play: PlayResult): InGame | PostGame {
     if (play.type == 'OK'){
@@ -12,7 +13,18 @@ function gameFromPlayResult(game: InGame, play: PlayResult): InGame | PostGame {
     }
 
     if (play.type == 'WINNER'){
-        return { ...game, status: 'POST-GAME', round: play.round, winner: play.winnerIndex }
+        // Calculate points for this round
+        const roundScores = calculateRoundScores(play.round, play.winnerIndex);
+        
+        // Add round scores to total scores
+        const newScores = game.scores.map((score, index) => score + roundScores[index]);
+        
+        return { 
+            ...game, 
+            status: 'POST-GAME', 
+            scores: newScores,
+            winner: play.winnerIndex 
+        }
     }
 
     throw new Error(`Unexpected play result: ${play.type}`);

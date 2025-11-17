@@ -3,6 +3,7 @@ import { Round } from "./round";
 export type GameBase = {
     gameId: string;
     players: string[];
+    scores: number[];
 };
 
 export type PreGame = GameBase & {
@@ -16,7 +17,7 @@ export type InGame = GameBase & {
 
 export type PostGame = GameBase & {
     status: 'POST-GAME';
-    round: Round;
+    scores: number[];
     winner: number;
 };
 

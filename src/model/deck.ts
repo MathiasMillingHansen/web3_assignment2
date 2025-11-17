@@ -2,7 +2,8 @@ import { type Card } from './card'
 import { colors } from './card'
 import * as _ from 'lodash'
 
-type Deck = ReadonlyArray<Card>;
+export type Deck = ReadonlyArray<Card>;
+export type { Card } from './card';
 
 //Fill out the empty functions
 export function createInitialDeck(): Deck

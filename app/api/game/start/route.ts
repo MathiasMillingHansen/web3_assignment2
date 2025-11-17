@@ -19,17 +19,21 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Only the first player can start the game' }, { status: 400 });
     }
 
-    if (game.status !== 'PRE-GAME') {
-        return NextResponse.json({ error: 'Game has not started yet' }, { status: 400 });
+    if (game.status !== 'PRE-GAME' && game.status !== 'POST-GAME') {
+        return NextResponse.json({ error: 'Game is already in progress' }, { status: 400 });
     }
 
     if (game.players.length < 2) {
         return NextResponse.json({ error: 'Not enough players to start the game' }, { status: 400 });
     }
 
-    game.round = createRound(game.players, 0, standardShuffler, 7);
-    game.status = 'IN-GAME';
-    await db.upsert<Game>('game', game.gameId, game);
+    const round = createRound(game.players, 0, standardShuffler, 7);
+    const inGame: Game = {
+        ...game,
+        status: 'IN-GAME',
+        round,
+    };
+    await db.upsert<Game>('game', game.gameId, inGame);
     
     console.log(`[StartGame] Game ${game.gameId} started, emitting event...`);
     // Notify all subscribers of the game state change

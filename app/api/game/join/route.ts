@@ -22,6 +22,7 @@ export async function POST(request: Request) {
 
     const playerIndex = game.players.length;
     game.players.push(requestBody.playerName);
+    game.scores.push(0);
     await db.upsert<Game>('game', game.gameId, game);
     
     // Notify all subscribers of the game state change
