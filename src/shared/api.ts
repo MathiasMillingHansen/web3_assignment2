@@ -6,7 +6,6 @@ export type GameState = {
     gameId: string;
     players: string[];
     status: GameStatus;
-    myPlayerIndex: number;
     round: RoundState | null;
     scores: number[];
 };

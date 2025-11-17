@@ -26,11 +26,17 @@ export default function GamePage() {
   console.log('game', gameState);
 
   const [wildCardIndex, setWildCardIndex] = useState<number | null>(null);
+  const [saidUno, setSaidUno] = useState(false);
 
   useEffect(() => {
-    const intervalId = setInterval(() => dispatch(slice.actions.getGameRequest({ gameId, playerIndex })), 1000); // Dispatch every second
-    return () => clearInterval(intervalId);
-  }, [dispatch, gameState]);
+    // Subscribe to game updates via SSE
+    dispatch(slice.actions.subscribeToGameRequest({ gameId, playerIndex }));
+    
+    // Cleanup: unsubscribe when component unmounts
+    return () => {
+      dispatch(slice.actions.unsubscribeFromGame());
+    };
+  }, [dispatch, gameId, playerIndex]);
 
   if (!gameState) {
     return (
@@ -118,18 +124,32 @@ export default function GamePage() {
 
       // Send action to server
       dispatch(slice.actions.playActionRequest({ gameId, playerIndex, action: playCardAction(cardIndex) }));
+      
+      // Reset UNO flag after playing
+      setSaidUno(false);
     };
 
     const handleColorSelect = (color: Color) => {
       if (wildCardIndex !== null) {
         dispatch(slice.actions.playActionRequest({ gameId, playerIndex, action: playCardAction(wildCardIndex, color) }));
         setWildCardIndex(null);
+        // Reset UNO flag after playing
+        setSaidUno(false);
       }
     };
 
     const handleDrawCard = () => {
       if (!myTurn) return;
       dispatch(slice.actions.playActionRequest({ gameId, playerIndex, action: drawCardAction() }));
+      // Reset UNO flag when drawing
+      setSaidUno(false);
+    };
+    
+    const handleSayUno = () => {
+      if (!myTurn) return;
+      // Send SAY_UNO action immediately
+      dispatch(slice.actions.playActionRequest({ gameId, playerIndex, action: sayUnoAction() }));
+      setSaidUno(true);
     };
 
     const handleChallengeUno = (targetIndex: number) => {
@@ -163,9 +183,10 @@ export default function GamePage() {
               <div
                 key={index}
                 className={`${styles.player_card} ${roundState.currentPlayerIndex === index ? styles.current_turn : ''
-                  }`}
+                  } ${roundState.handSizes[index] === 1 && index !== playerIndex ? styles.uno_challengeable : ''}`}
                 onClick={() => handleChallengeUno(index)}
-                title={index !== playerIndex ? "Click to challenge UNO" : ""}
+                title={index !== playerIndex && roundState.handSizes[index] === 1 ? "Click to challenge UNO!" : ""}
+                style={{ cursor: index !== playerIndex && roundState.handSizes[index] === 1 ? 'pointer' : 'default' }}
               >
                 <div className={styles.player_name}>
                   {player} {index === playerIndex && '(You)'}
@@ -185,24 +206,14 @@ export default function GamePage() {
               <div className={styles.discard_pile}>
                 <h3>Discard Pile</h3>
                 <div
-                  className={`${styles.top_card} ${
-                    roundState.topCard.type === 'WILD' || roundState.topCard.type === 'WILD DRAW' 
-                      ? styles.card_wild 
-                      : ''
-                  }`}
-                  style={
-                    roundState.topCard.type === 'WILD' || roundState.topCard.type === 'WILD DRAW'
-                      ? {}
-                      : { backgroundColor: getCardColor(roundState.topCard) }
-                  }
+                  className={styles.top_card}
+                  style={{ backgroundColor: roundState.currentColor.toLowerCase() }}
                 >
                   {getCardDisplay(roundState.topCard)}
                 </div>
-                {roundState.currentColor && (
-                  <p style={{ marginTop: '1rem' }}>
-                    Current Color: <strong>{roundState.currentColor}</strong>
-                  </p>
-                )}
+                <p style={{ marginTop: '1rem' }}>
+                  Current Color: <strong>{roundState.currentColor}</strong>
+                </p>
               </div>
             )}
 
@@ -215,6 +226,17 @@ export default function GamePage() {
               >
                 {isLoading ? 'Drawing...' : 'Draw Card'}
               </button>
+              
+              {/* Say UNO Button - show when player has 2 cards */}
+              {roundState.myHand.length === 2 && (
+                <button
+                  onClick={handleSayUno}
+                  disabled={!myTurn || isLoading || saidUno}
+                  className={`${styles.uno_button} ${saidUno ? styles.uno_said : ''}`}
+                >
+                  {saidUno ? '✓ UNO!' : 'Say UNO!'}
+                </button>
+              )}
             </div>
 
             {/* Your Hand */}

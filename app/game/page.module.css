@@ -43,6 +43,21 @@
     box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
 }
 
+.player_card.uno_challengeable {
+    border: 2px solid #ff6b6b;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.5);
+    animation: pulse-challenge 2s infinite;
+}
+
+@keyframes pulse-challenge {
+    0%, 100% {
+        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.5);
+    }
+    50% {
+        box-shadow: 0 6px 16px rgba(255, 107, 107, 0.8);
+    }
+}
+
 .player_name {
     font-size: 1.1rem;
     margin-bottom: 0.25rem;
@@ -91,6 +106,9 @@
     padding: 2rem;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .draw_button {
@@ -114,6 +132,33 @@
 .draw_button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+.uno_button {
+    padding: 1.5rem 3rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: white;
+    border: none;
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.uno_button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+}
+
+.uno_button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.uno_button.uno_said {
+    background: linear-gradient(135deg, #26de81 0%, #20bf6b 100%);
 }
 
 .my_hand {

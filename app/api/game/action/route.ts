@@ -4,6 +4,7 @@ import * as db from '@/src/file_database';
 import { Game, InGame, PostGame } from '@/src/model/game';
 import { gameStateForPlayer } from '../util';
 import { playAction, PlayResult } from '@/src/model/round';
+import { gameEvents } from '@/src/game_events';
 
 function gameFromPlayResult(game: InGame, play: PlayResult): InGame | PostGame {
     if (play.type == 'OK'){
@@ -35,8 +36,10 @@ export async function POST(request: Request) {
 
     let gameAfterPlay = gameFromPlayResult(game, playResult);
     await db.upsert('game', game.gameId, gameAfterPlay);
+    
+    // Notify all subscribers of the game state change
+    gameEvents.emit(game.gameId);
 
-    const responseBody: api.PlayActionResponse = { game: gameStateForPlayer(gameAfterPlay, requestBody.playerIndex) };
-    const response = NextResponse.json(responseBody);
-    return response;
+    // Return success - game state update will come via SSE
+    return NextResponse.json({ success: true });
 }

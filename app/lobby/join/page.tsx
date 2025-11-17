@@ -15,10 +15,10 @@ export default function JoinGame() {
     const state = useAppSelector((state) => state.gameState);
 
     useEffect(() => {
-        if (state.currentGame) {
-            router.push(`/game?gameId=${state.currentGame.gameId}&playerIndex=${state.currentGame.myPlayerIndex}`);
+        if (state.gameId !== undefined && state.playerIndex !== undefined) {
+            router.push(`/game?gameId=${state.gameId}&playerIndex=${state.playerIndex}`);
         }
-    }, [state.currentGame, router]);
+    }, [state.gameId, state.playerIndex, router]);
 
     const handleJoinGame = (e: React.FormEvent) => {
         e.preventDefault();

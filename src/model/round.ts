@@ -5,6 +5,14 @@ import { Card, Color } from './card'
 import { createInitialDeck } from './deck';
 import * as _ from 'lodash'
 
+// Helper to ensure saidUno is always an array (handles migration from old Set/object format)
+function ensureSaidUnoArray(value: any): number[] {
+    if (Array.isArray(value)) return value;
+    if (value instanceof Set) return Array.from(value);
+    // Handle old empty object {} or other formats
+    return [];
+}
+
 export type Round = {
     hands: Card[][],
     discardPile: Card[],
@@ -15,6 +23,7 @@ export type Round = {
     dealer: number,
     currentColor: Color; // Matches color of last in discardPile, expect for wild cards, then currentColor is the chosen color.
     direction: 1 | -1;
+    saidUno: number[]; // Track which players have said UNO
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------
@@ -53,6 +62,7 @@ export function createRound(players: string[], dealer: number, shuffler: Shuffle
         currentColor: firstCard.color,
         hands,
         direction: 1,
+        saidUno: [],
     };
 }
 
@@ -80,11 +90,27 @@ export type PlayResult = PlayContinue | PlayWinner | PlayError;
 function isPlayable(card: Card, hand: Card[], topCard: Card, topColor: Color): boolean {
     switch (card.type) {
         case 'WILD': {
+            // Regular wild cards can be played anytime
             return true;
         } break;
 
         case 'WILD DRAW': {
-            if (!hand.some(c => 'color' in c && c.color === topColor)) return true;
+            // Wild Draw +4 can only be played if no other cards are playable
+            return !hand.some(c => {
+                if (c === card) return false; // Don't check the wild draw itself
+                if (c.type === 'WILD' || c.type === 'WILD DRAW') return false; // Don't check other wild cards
+                
+                // Check if this card matches color
+                if ('color' in c && c.color === topColor) return true;
+                
+                // Check if numbered card matches number
+                if (c.type === 'NUMBERED' && topCard.type === 'NUMBERED' && c.number === topCard.number) return true;
+                
+                // Check if special card matches type
+                if ((c.type === 'REVERSE' || c.type === 'SKIP' || c.type === 'DRAW') && c.type === topCard.type) return true;
+                
+                return false;
+            });
         } break;
 
         case 'REVERSE':
@@ -106,6 +132,7 @@ function isPlayable(card: Card, hand: Card[], topCard: Card, topColor: Color): b
 function nextPlayer(round: Round): Round {
     return {
         ...round,
+        saidUno: ensureSaidUnoArray(round.saidUno),
         playerInTurn: (round.playerInTurn + round.direction + round.players.length) % round.players.length
     };
 }
@@ -117,6 +144,7 @@ const drawCardsToPlayer = (round: Round, playerIndex: number, count: number): Ro
     }
     return {
         ...round,
+        saidUno: ensureSaidUnoArray(round.saidUno),
         hands: round.hands.map((hand, index) => index === playerIndex ? [...hand, ...card] : hand),
         drawPile: round.drawPile.slice(count)
     };
@@ -129,6 +157,7 @@ const drawCard = (round: Round): Round => {
 function swapDirection(round: Round): Round {
     return {
         ...round,
+        saidUno: ensureSaidUnoArray(round.saidUno),
         direction: round.direction == 1 ? -1 : 1,
     };
 }
@@ -221,12 +250,60 @@ export function playAction(round: Round, playerIndex: number, action: GameAction
         }
 
         const roundAfterEffect: Round = applyCardEffect(roundAfterPlay, card);
-        return { type: 'OK', round: roundAfterEffect };
+        
+        // Only clear UNO flag if player no longer has exactly 1 card
+        // (they either won with 0 cards, or drew cards and now have more than 1)
+        let newSaidUno = ensureSaidUnoArray(roundAfterEffect.saidUno);
+        console.log(`[UNO] After playing card, player ${playerIndex} has ${newHand.length} cards. saidUno before:`, newSaidUno);
+        if (newHand.length !== 1) {
+            newSaidUno = newSaidUno.filter((p: number) => p !== playerIndex);
+            console.log(`[UNO] Cleared UNO flag for player ${playerIndex}. saidUno after:`, newSaidUno);
+        } else {
+            console.log(`[UNO] Keeping UNO flag for player ${playerIndex} (still has 1 card)`);
+        }
+        
+        return { type: 'OK', round: { ...roundAfterEffect, saidUno: newSaidUno } };
     }
 
     if (action.type == 'DRAW_CARD') {
-        return { type: 'OK', round: _.flow(drawCard, nextPlayer)(round) };
+        const roundAfterDraw = _.flow(drawCard, nextPlayer)(round);
+        // Clear UNO flag when drawing (player no longer has 1 card)
+        const newSaidUno = ensureSaidUnoArray(roundAfterDraw.saidUno).filter((p: number) => p !== playerIndex);
+        return { type: 'OK', round: { ...roundAfterDraw, saidUno: newSaidUno } };
+    }
+    
+    if (action.type == 'SAY_UNO') {
+        // Mark that this player has said UNO
+        const currentSaidUno = ensureSaidUnoArray(round.saidUno);
+        const newSaidUno = currentSaidUno.includes(playerIndex) 
+            ? currentSaidUno 
+            : [...currentSaidUno, playerIndex];
+        console.log(`[UNO] Player ${playerIndex} said UNO. Current saidUno:`, newSaidUno);
+        return { type: 'OK', round: { ...round, saidUno: newSaidUno } };
+    }
+    
+    if (action.type == 'CHALLENGE_UNO') {
+        const targetIndex = action.targetPlayer;
+        const saidUnoArray = ensureSaidUnoArray(round.saidUno);
+        
+        console.log(`[UNO] Player ${playerIndex} challenging player ${targetIndex}`);
+        console.log(`[UNO] Target has ${round.hands[targetIndex]?.length} cards`);
+        console.log(`[UNO] saidUno array:`, saidUnoArray);
+        console.log(`[UNO] Target in saidUno array?`, saidUnoArray.includes(targetIndex));
+        
+        // Check if target player has exactly 1 card and hasn't said UNO
+        if (round.hands[targetIndex]?.length === 1 && !saidUnoArray.includes(targetIndex)) {
+            // Challenge successful! Target draws 2 cards as penalty
+            console.log(`[UNO] Challenge successful! Player ${targetIndex} draws 2 cards`);
+            const roundAfterPenalty = drawCardsToPlayer(round, targetIndex, 2);
+            return { type: 'OK', round: roundAfterPenalty };
+        }
+        
+        // Challenge failed or invalid - challenger might draw penalty
+        console.log(`[UNO] Challenge failed!`);
+        return { type: 'ERROR', message: 'Invalid UNO challenge' };
     }
 
-    throw new Error(`Action not yet implemented: ${action.type}`);
+    const _exhaustiveCheck: never = action;
+    throw new Error(`Action not yet implemented: ${(action as any).type}`);
 }

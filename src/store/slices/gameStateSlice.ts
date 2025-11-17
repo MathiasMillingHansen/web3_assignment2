@@ -4,6 +4,8 @@ import * as api from '@/src/shared/api';
 
 interface GameStateSlice {
   currentGame?: api.GameState;
+  gameId?: string;
+  playerIndex?: number;
   isLoading: boolean;
   error: string | null;
 }
@@ -26,9 +28,10 @@ export const gameStateSlice = createSlice({
       state.isLoading = true;
       state.error = null;
     },
-    createGameSuccess: (state, action: PayloadAction<api.CreateGameResponse>) => {
+    createGameSuccess: (state, action: PayloadAction<{ gameId: string; playerIndex: number }>) => {
       state.isLoading = false;
-      state.currentGame = action.payload.game;
+      state.gameId = action.payload.gameId;
+      state.playerIndex = action.payload.playerIndex;
     },
     createGameFailure: (state, action: PayloadAction<string>) => {
       state.isLoading = false;
@@ -42,9 +45,10 @@ export const gameStateSlice = createSlice({
       state.isLoading = true;
       state.error = null;
     },
-    joinGameSuccess: (state, action: PayloadAction<api.JoinGameResponse>) => {
+    joinGameSuccess: (state, action: PayloadAction<{ playerIndex: number; gameId: string }>) => {
       state.isLoading = false;
-      state.currentGame = action.payload.game;
+      state.gameId = action.payload.gameId;
+      state.playerIndex = action.payload.playerIndex;
     },
     joinGameFailure: (state, action: PayloadAction<string>) => {
       state.isLoading = false;
@@ -58,9 +62,9 @@ export const gameStateSlice = createSlice({
       state.isLoading = true;
       state.error = null;
     },
-    startGameSuccess: (state, action: PayloadAction<api.StartGameResponse>) => {
+    startGameSuccess: (state) => {
       state.isLoading = false;
-      state.currentGame = action.payload.game;
+      // Game state will be updated via SSE subscription
     },
     startGameFailure: (state, action: PayloadAction<string>) => {
       state.isLoading = false;
@@ -85,15 +89,33 @@ export const gameStateSlice = createSlice({
     },
 
     // --------------------------------------------------------------------------------------------------------------------------------
+    // Subscribe to game updates (SSE)
+
+    subscribeToGameRequest: (state, _action: PayloadAction<{ gameId: string; playerIndex: number }>) => {
+      state.isLoading = true;
+      state.error = null;
+    },
+    gameStateUpdate: (state, action: PayloadAction<api.GameState>) => {
+      console.log('[Redux] gameStateUpdate called with:', action.payload);
+      state.isLoading = false;
+      state.currentGame = action.payload;
+      // Ensure gameId and playerIndex are set
+      if (!state.gameId) state.gameId = action.payload.gameId;
+    },
+    unsubscribeFromGame: (state) => {
+      // Just a marker action for the epic to clean up
+    },
+
+    // --------------------------------------------------------------------------------------------------------------------------------
     // PlayAction
 
     playActionRequest: (state, _action: PayloadAction<api.PlayActionRequest>) => {
       state.isLoading = true;
       state.error = null; // Clear error when making a new play action
     },
-    playActionSuccess: (state, action: PayloadAction<api.PlayActionResponse>) => {
+    playActionSuccess: (state) => {
       state.isLoading = false;
-      state.currentGame = action.payload.game;
+      // Game state will be updated via SSE subscription
     },
     playActionFailure: (state, action: PayloadAction<string>) => {
       state.isLoading = false;

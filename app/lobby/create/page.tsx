@@ -14,10 +14,10 @@ export default function CreateGame() {
     const state = useAppSelector((state) => state.gameState);
 
     useEffect(() => {
-        if (state.currentGame) {
-            router.push(`/game?gameId=${state.currentGame.gameId}&playerIndex=0`); // Redirect to game page when game is created
+        if (state.gameId !== undefined && state.playerIndex !== undefined) {
+            router.push(`/game?gameId=${state.gameId}&playerIndex=${state.playerIndex}`);
         }
-    }, [state.currentGame, router]);
+    }, [state.gameId, state.playerIndex, router]);
 
     const handleCreateGame = (e: React.FormEvent) => {
         e.preventDefault();

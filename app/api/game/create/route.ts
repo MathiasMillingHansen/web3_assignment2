@@ -3,7 +3,7 @@ import * as db from '@/src/file_database';
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto'
 import { Game } from '@/src/model/game';
-import { gameStateForPlayer } from '../util';
+import { gameEvents } from '@/src/game_events';
 
 export async function POST(request: Request) {
     let requestBody = await request.json() as api.CreateGameRequest;
@@ -13,7 +13,10 @@ export async function POST(request: Request) {
         status: 'PRE-GAME',
     };
     await db.upsert('game', game.gameId, game);
-    let gameState = gameStateForPlayer(game, 0)!;
-    let responseBody: api.CreateGameResponse = { game: gameState };
-    return NextResponse.json(responseBody);
+    
+    // Notify subscribers (in case someone is already waiting)
+    gameEvents.emit(game.gameId);
+    
+    // Return minimal data - game state will come via SSE
+    return NextResponse.json({ gameId: game.gameId, playerIndex: 0 });
 }

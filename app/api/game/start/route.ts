@@ -6,6 +6,7 @@ import { createReadStream } from 'fs';
 import { createRound } from '@/src/model/round';
 import { standardShuffler } from '@/src/utils/random_utils';
 import { gameStateForPlayer } from '../util';
+import { gameEvents } from '@/src/game_events';
 
 export async function POST(request: Request) {
     let requestBody = await request.json() as api.StartGameRequest;
@@ -29,9 +30,12 @@ export async function POST(request: Request) {
     game.round = createRound(game.players, 0, standardShuffler, 7);
     game.status = 'IN-GAME';
     await db.upsert<Game>('game', game.gameId, game);
+    
+    console.log(`[StartGame] Game ${game.gameId} started, emitting event...`);
+    // Notify all subscribers of the game state change
+    gameEvents.emit(game.gameId);
+    console.log(`[StartGame] Event emitted for game ${game.gameId}`);
 
-    let gameState = gameStateForPlayer(game, requestBody.playerIndex);
-    let responseBody: api.StartGameResponse = { game: gameState! };
-    let response = NextResponse.json(responseBody)
-    return response;
+    // Return success - game state update will come via SSE
+    return NextResponse.json({ success: true });
 }

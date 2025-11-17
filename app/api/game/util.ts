@@ -9,7 +9,6 @@ export function gameStateForPlayer(game: Game, playerIndex: number): api.GameSta
         gameId: game.gameId,
         players: game.players,
         status: game.status,
-        myPlayerIndex: playerIndex,
         round: game.status != 'PRE-GAME' ? {
             currentPlayerIndex: game.round.playerInTurn,
             myHand: game.round.hands[playerIndex] ?? [],

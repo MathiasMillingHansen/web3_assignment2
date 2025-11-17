@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import * as db from '@/src/file_database';
 import { Game } from '@/src/model/game';
 import { gameStateForPlayer } from '../util';
+import { gameEvents } from '@/src/game_events';
 
 export async function POST(request: Request) {
     let requestBody = await request.json() as api.JoinGameRequest;
@@ -19,11 +20,13 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Player name already taken in this game' }, { status: 400 });
     }
 
+    const playerIndex = game.players.length;
     game.players.push(requestBody.playerName);
     await db.upsert<Game>('game', game.gameId, game);
+    
+    // Notify all subscribers of the game state change
+    gameEvents.emit(game.gameId);
 
-    let gameState = gameStateForPlayer(game, game.players.length - 1)!;
-    let responseBody: api.JoinGameResponse = { game: gameState };
-    let response = NextResponse.json(responseBody)
-    return response;
+    // Return player index - game state update will come via SSE
+    return NextResponse.json({ playerIndex });
 }
