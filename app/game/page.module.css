@@ -71,12 +71,18 @@
 .top_card {
     padding: 3rem 2rem;
     border-radius: 1rem;
-    color: white;
+    color: black;
     font-size: 2rem;
     font-weight: bold;
     min-width: 200px;
+    min-height: 180px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     margin-top: 1rem;
+    border: 3px solid rgba(0, 0, 0, 0.2);
+    white-space: pre-line;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .draw_pile_section {
@@ -127,16 +133,22 @@
 }
 
 .card {
-    padding: 2rem 1.5rem;
+    padding: 3rem 1.5rem;
     border-radius: 1rem;
-    color: white;
+    color: black;
     font-weight: bold;
     min-width: 120px;
+    min-height: 160px;
     text-align: center;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    font-size: 1.1rem;
+    font-size: 1.5rem;
+    border: 3px solid rgba(0, 0, 0, 0.2);
+    white-space: pre-line;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .card:hover {
@@ -244,4 +256,23 @@
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.card_wild {
+    background: linear-gradient(135deg, 
+        red 0%, 
+        orange 16.66%, 
+        yellow 33.33%, 
+        green 50%, 
+        blue 66.66%, 
+        indigo 83.33%, 
+        violet 100%) !important;
+    animation: rainbow-shift 3s ease infinite;
+    background-size: 200% 200%;
+}
+
+@keyframes rainbow-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }

@@ -6,15 +6,14 @@ import { GameState } from '@/src/shared/api';
 
 // Pure function: Get card display text
 export function getCardDisplay(card: Card): string {
-    if (card.type === 'WILD') return 'Wild';
-    if (card.type === 'WILD DRAW') return 'Wild +4';
+    if (card.type === 'WILD') return '⭐';
+    if (card.type === 'WILD DRAW') return '⭐\n+4';
 
     if ('color' in card) {
-        const color = card.color;
-        if (card.type === 'NUMBERED') return `${color} ${card.number}`;
-        if (card.type === 'SKIP') return `${color} Skip`;
-        if (card.type === 'REVERSE') return `${color} Reverse`;
-        if (card.type === 'DRAW') return `${color} +2`;
+        if (card.type === 'NUMBERED') return `${card.number}`;
+        if (card.type === 'SKIP') return '🚫';
+        if (card.type === 'REVERSE') return '🔄';
+        if (card.type === 'DRAW') return '+2';
     }
 
     return 'Unknown';

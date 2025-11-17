@@ -185,8 +185,16 @@ export default function GamePage() {
               <div className={styles.discard_pile}>
                 <h3>Discard Pile</h3>
                 <div
-                  className={styles.top_card}
-                  style={{ backgroundColor: getCardColor(roundState.topCard) }}
+                  className={`${styles.top_card} ${
+                    roundState.topCard.type === 'WILD' || roundState.topCard.type === 'WILD DRAW' 
+                      ? styles.card_wild 
+                      : ''
+                  }`}
+                  style={
+                    roundState.topCard.type === 'WILD' || roundState.topCard.type === 'WILD DRAW'
+                      ? {}
+                      : { backgroundColor: getCardColor(roundState.topCard) }
+                  }
                 >
                   {getCardDisplay(roundState.topCard)}
                 </div>
@@ -200,7 +208,6 @@ export default function GamePage() {
 
             {/* Draw Pile */}
             <div className={styles.draw_pile_section}>
-              <h3>Draw Pile ({roundState.drawPileSize} cards)</h3>
               <button
                 onClick={handleDrawCard}
                 disabled={!myTurn || isLoading}
@@ -218,8 +225,10 @@ export default function GamePage() {
                   <div
                     key={index}
                     onClick={() => handlePlayCard(index)}
-                    className={`${styles.card} ${myTurn ? styles.playable : ''}`}
-                    style={{ backgroundColor: getCardColor(card) }}
+                    className={`${styles.card} ${myTurn ? styles.playable : ''} ${
+                      card.type === 'WILD' || card.type === 'WILD DRAW' ? styles.card_wild : ''
+                    }`}
+                    style={card.type === 'WILD' || card.type === 'WILD DRAW' ? {} : { backgroundColor: getCardColor(card) }}
                   >
                     {getCardDisplay(card)}
                   </div>

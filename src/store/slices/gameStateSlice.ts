@@ -72,11 +72,12 @@ export const gameStateSlice = createSlice({
 
     getGameRequest: (state, _action: PayloadAction<api.GetGameRequest>) => {
       state.isLoading = true;
-      state.error = null;
+      // Don't clear error on polling requests - let it persist
     },
     getGameSuccess: (state, action: PayloadAction<api.GetGameResponse>) => {
       state.isLoading = false;
       state.currentGame = action.payload.game;
+      // Don't clear error here either - let it persist until next action
     },
     getGameFailure: (state, action: PayloadAction<string>) => {
       state.isLoading = false;
@@ -88,7 +89,7 @@ export const gameStateSlice = createSlice({
 
     playActionRequest: (state, _action: PayloadAction<api.PlayActionRequest>) => {
       state.isLoading = true;
-      state.error = null;
+      state.error = null; // Clear error when making a new play action
     },
     playActionSuccess: (state, action: PayloadAction<api.PlayActionResponse>) => {
       state.isLoading = false;

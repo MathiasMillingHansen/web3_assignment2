@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
     const playResult = playAction(game.round, requestBody.playerIndex, requestBody.action);
     if (playResult.type == 'ERROR') {
-        return NextResponse.json({ error: playResult.message });
+        return NextResponse.json({ error: playResult.message }, { status: 400 });
     }
 
     let gameAfterPlay = gameFromPlayResult(game, playResult);
